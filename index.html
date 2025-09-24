@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Super Party Pong Bros - Physics Game</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="style.css" rel="stylesheet">
+</head> 
+<body>
+  <!-- Name Input Screen (SHOWS FIRST) -->
+  <div id="nameInputScreen" class="name-input-screen" style="display: flex;">
+    <div class="name-input-content">
+      <h1 class="name-input-title">ENTER YOUR NAME</h1>
+      <form id="nameInputForm" class="name-input-form">
+        <input type="text" id="playerName" class="name-input" placeholder="PLAYER NAME" maxlength="20" required autofocus>
+        <button type="submit" class="name-submit-button">START GAME</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Intro Screen (HIDDEN INITIALLY) -->
+  <div id="introScreen" class="intro-screen" style="display: none;">
+    <div class="intro-content">
+      <h1 class="intro-title">SUPER PARTY PONG BROS</h1>
+      <div class="intro-character">
+        <div class="mario-silhouette"></div>
+      </div>
+      <div class="intro-instructions">
+        <p>Welcome, <span id="displayPlayerName"></span>!</p>
+        <p>Throw balls into moving cups!</p>
+        <p>Score points and beat the challenge!</p>
+      </div>
+      <button id="startBtn" class="start-button">START GAME</button>
+      <div class="intro-controls">
+        <p>CONTROLS: WASD to move • CLICK & DRAG to throw • SHIFT for trajectory</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Game Over Popup -->
+  <div id="gameOverPopup" class="game-over-popup" style="display: none;">
+    <div class="game-over-content">
+      <h2 class="game-over-title">GAME OVER</h2>
+      <div id="playerScoreDisplay" class="player-score"></div>
+      <div class="top-scores">
+        <h3>TOP 5 SCORES</h3>
+        <div id="topScoresList"></div>
+      </div>
+      <button id="playAgainBtn" class="play-again-button">PLAY AGAIN</button>
+    </div>
+  </div>
+
+  <!-- Main Game (initially hidden) -->
+  <div id="gameContainer" class="container" style="display: none;">
+    <h1>SUPER PARTY PONG BROS - Player: <span id="currentPlayerName"></span></h1>
+    <div class="game-area">
+      <canvas id="gameCanvas" width="800" height="600"></canvas>
+      <div class="hud">
+        <div class="stats">
+          <div>
+            <strong>SCORE:</strong> <span id="score">0</span> / <span id="total">10</span>
+          </div>
+          <div>
+            <strong>BALLS:</strong> <span id="ballsLeft">10</span>
+          </div>
+        </div>
+        
+        <div>
+          <strong>POWER:</strong>
+          <div class="power-meter">
+            <div class="power-fill" id="powerFill"></div>
+          </div>
+        </div>
+        
+        <div>
+          <strong>CUP COLOR:</strong>
+          <div class="cup-colors">
+            <div class="color-dot" style="background:var(--cup-blue)" data-color="blue"></div>
+            <div class="color-dot active" style="background:var(--cup-red)" data-color="red"></div>
+            <div class="color-dot" style="background:var(--cup-green)" data-color="green"></div>
+            <div class="color-dot" style="background:var(--cup-yellow)" data-color="yellow"></div>
+          </div>
+        </div>
+        
+        <div>
+          <button id="resetBtn">RESET CUPS</button>
+        </div>
+        
+        <div class="instructions">
+          <p><strong>HOW TO PLAY:</strong></p>
+          <p>• CLICK ANYWHERE to start aiming</p>
+          <p>• DRAG to set direction and power</p>
+          <p>• RELEASE to throw the ball</p>
+          <p>• HOLD SHIFT to show trajectory</p>
+          <p>• USE WASD to move character</p>
+          <p>• GET balls in cups to score points!</p>
+        </div>
+        
+        <div class="controls">
+          <div class="control-key w">W</div>
+          <div class="control-key a">A</div>
+          <div class="control-key s">S</div>
+          <div class="control-key d">D</div>
+        </div>
+      </div>
+    </div>
+    
+    <footer>
+      <small>Made with canvas, physics & Mario-style fun!</small>
+    </footer>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
