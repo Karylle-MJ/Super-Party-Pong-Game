@@ -934,16 +934,26 @@ async function fetchTopScores() {
         newBallBtn.style.display = "none";
       }
       
-      // Keyboard events
+     // Keyboard events
       window.addEventListener('keydown', (e) => {
         keys[e.key] = true;
-        if (e.key === 'Shift') window.shiftKey = true;
+        
+        // Prevent Sticky Keys popup when Shift is pressed
+        if (e.key === 'Shift') {
+          window.shiftKey = true;
+          e.preventDefault(); // This prevents the Sticky Keys dialog
+        }
+        
+        // Additional prevention for repeated Shift presses
+        if (e.key === 'Shift' && e.repeat) {
+          e.preventDefault();
+        }
       });
-      
+
       window.addEventListener('keyup', (e) => {
         keys[e.key] = false;
         if (e.key === 'Shift') window.shiftKey = false;
-      });
+      }); 
       
       // Cup color selection
       colorDots.forEach(dot => {
@@ -1056,3 +1066,4 @@ function drawAimingFeedback() {
       }
 
     });
+
