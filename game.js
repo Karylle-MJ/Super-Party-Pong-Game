@@ -33,13 +33,29 @@ document.getElementById('startBtn').addEventListener('click', function() {
 });
 
 // Game over popup functionality
-function showGameOverPopup(score) {
+function showGameOverPopup(score, message = "") {
+
+  // Prevent multiple score saves
+  if (scoreSaved) return;
+  scoreSaved = true;
+
   // Save score to Google Sheets
   saveScoreToSheet(playerName, score);
   
   // Display player's score
   document.getElementById('playerScoreDisplay').textContent = `${playerName}: ${score} points`;
-  
+  // Display special message if provided
+  const messageElement = document.getElementById('gameOverMessage');
+  if (!messageElement) {
+    // Create message element if it doesn't exist
+    const messageDiv = document.createElement('div');
+    messageDiv.id = 'gameOverMessage';
+    messageDiv.className = 'game-over-message';
+    messageDiv.textContent = message;
+    document.querySelector('.game-over-content').insertBefore(messageDiv, document.querySelector('.top-scores'));
+  } else {
+    messageElement.textContent = message;
+  }
   // Show loading state
   const topScoresList = document.getElementById('topScoresList');
   topScoresList.innerHTML = '<div class="loading-spinner">Loading scores...</div>';
@@ -112,7 +128,6 @@ async function saveScoreToSheet(name, score) {
     return result.success || false;
   } catch (error) {
     console.error("Save error:", error);
-    saveScoreToLocalStorage(name, score); // fallback
     return false;
   }
 }
@@ -174,9 +189,13 @@ async function fetchTopScores() {
     let armAngle = 0;
     let armSwingDirection = 1;
     let keys = {};
-    window.shiftKey = false;
+    window.trajectoryKey = false;
     let ballInMotion = false;
     let gameTime = 0;
+    let shiftPressCount = 0;
+    let shiftPressTimer = null;
+    let gameOverTriggered = false;
+    let scoreSaved = false; 
 
     // Separation line
     const SEPARATION_LINE_X = canvas.width / 2;
@@ -744,107 +763,143 @@ async function fetchTopScores() {
         });
       }
     }
+    //check for game over conditions
+    function checkGameOver() {
 
-    // Update ball physics
-    function updateBall() {
-      if (!ball || !ball.active || ball.held) return;
-      
-      ballInMotion = true;
-      ball.vy += GRAVITY;
-      ball.x += ball.vx;
-      ball.y += ball.vy;
-      ball.vx *= FRICTION;
-      ball.vy *= FRICTION;
-      
-      // Floor collision
-      if (ball.y > canvas.height - ball.radius) {
-        ball.y = canvas.height - ball.radius;
-        ball.vy = -ball.vy * 0.6;
-        
-        if (Math.abs(ball.vy) < 0.5) {
-          ball.active = false;
-          ballInMotion = false;
-          
-          setTimeout(() => {
-            if (ballsLeft > 0) {
-              createBall();
-            }
-          }, 1000);
-        }
-      }
-      
-      // Wall collisions
-      if (ball.x < ball.radius) {
-        ball.x = ball.radius;
-        ball.vx = -ball.vx * 0.8;
-      } else if (ball.x > canvas.width - ball.radius) {
-        ball.x = canvas.width - ball.radius;
-        ball.vx = -ball.vx * 0.8;
-      }
-      
-      // Cup collisions
-      cups.forEach(cup => {
-        if (cup.filled) return;
-        
-        const cupBottomRadius = cup.radius * 0.7;
-        const cupSlope = (cup.radius - cupBottomRadius) / cup.height;
-        
-        const dx = ball.x - cup.x;
-        const dy = ball.y - cup.y;
-        
-        const cupRadiusAtBallY = cup.radius - cupSlope * dy;
-        const distance = Math.sqrt(dx*dx);
-        
-        if (dy > 0 && dy < cup.height && distance < cupRadiusAtBallY) {
-          cup.filled = true;
-          score++;
-          scoreElement.textContent = score;
-          
-          createExplosion(cup.x, cup.y, '#2ecc71', 25); // Bigger explosion for bigger movements
-          
-          ball.active = false;
-          ballInMotion = false;
+      // Prevent multiple triggers
+      if (gameOverTriggered) return;
+
+      // Only trigger game over when no balls left AND no ball is active/in motion
+      const noBallsLeft = ballsLeft <= 0;
+      const noActiveBall = !ball || !ball.active;
+
+      if (noBallsLeft && noActiveBall && !ballInMotion) {
+      gameOverTriggered = true; // Set flag immediately to prevent re-triggering
+
+        setTimeout(() => {
+          let message = "";
           
           if (score >= totalCups) {
-            setTimeout(() => {
-              alert('YOU WIN! Perfect game! That was challenging with all that movement!');
-              resetGame();
-            }, 1000);
+            message = "PERFECT! You got all cups! 🎯";
+          } else if (score >= totalCups * 0.8) {
+            message = "EXCELLENT! Almost perfect! 🌟";
+          } else if (score >= totalCups * 0.6) {
+            message = "GREAT JOB! You're getting good! 👍";
+          } else if (score >= totalCups * 0.4) {
+            message = "GOOD EFFORT! Keep practicing! 💪";
+          } else {
+            message = "NICE TRY! Practice makes perfect! 🎮";
           }
           
-          setTimeout(() => {
-            if (ballsLeft > 0) {
-              createBall();
-            }
-          }, 500);
-        }
-      });
-      
-      // Check for game over
-      if (!ball.active && !ballInMotion && ballsLeft <= 0 && score < totalCups) {
-        setTimeout(() => {
-          showGameOverPopup(score);
+          // Display the message briefly before showing game over
+          showGameOverPopup(score, message);
         }, 1000);
       }
     }
+
+        // Update ball physics
+    function updateBall() {
+  if (!ball || !ball.active || ball.held) return;
+  
+  ballInMotion = true;
+  ball.vy += GRAVITY;
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+  ball.vx *= FRICTION;
+  ball.vy *= FRICTION;
+  
+  // Floor collision
+  if (ball.y > canvas.height - ball.radius) {
+    ball.y = canvas.height - ball.radius;
+    ball.vy = -ball.vy * 0.6;
+    
+    if (Math.abs(ball.vy) < 0.5) {
+      ball.active = false;
+      ballInMotion = false;
+      
+      setTimeout(() => {
+        if (ballsLeft > 0) {
+          createBall();
+        } else {
+          checkGameOver(); // Check for game over when no balls left
+        }
+      }, 1000);
+    }
+  }
+  
+  // Wall collisions
+  if (ball.x < ball.radius) {
+    ball.x = ball.radius;
+    ball.vx = -ball.vx * 0.8;
+  } else if (ball.x > canvas.width - ball.radius) {
+    ball.x = canvas.width - ball.radius;
+    ball.vx = -ball.vx * 0.8;
+  }
+  
+  // Cup collisions
+  cups.forEach(cup => {
+    if (cup.filled) return;
+    
+    const cupBottomRadius = cup.radius * 0.7;
+    const cupSlope = (cup.radius - cupBottomRadius) / cup.height;
+    
+    const dx = ball.x - cup.x;
+    const dy = ball.y - cup.y;
+    
+    const cupRadiusAtBallY = cup.radius - cupSlope * dy;
+    const distance = Math.sqrt(dx*dx);
+    
+    if (dy > 0 && dy < cup.height && distance < cupRadiusAtBallY) {
+      cup.filled = true;
+      score++;
+      scoreElement.textContent = score;
+      
+      createExplosion(cup.x, cup.y, '#2ecc71', 25);
+      
+      ball.active = false;
+      ballInMotion = false;
+      
+      // Check if all cups are filled
+      if (score >= totalCups) {
+        setTimeout(() => {
+          checkGameOver(); // This will show the perfect game message
+        }, 1000);
+        return;
+      }
+      
+      setTimeout(() => {
+        if (ballsLeft > 0) {
+          createBall();
+        }
+      }, 500);
+    }
+  });
+  
+  // Check for game over when ball stops moving but there are still balls left
+  if (!ball.active && !ballInMotion) {
+    setTimeout(() => {
+      checkGameOver();
+    }, 500);
+  }
+}
 
     // Update character position (restricted to left side)
     function updateCharacter() {
       const maxX = SEPARATION_LINE_X - CHAR_WIDTH / 2 - 10;
       
-      if (keys['a'] || keys['ArrowLeft']) {
+      if (keys['a'] || keys['A'] || keys['ArrowLeft']) {
         characterX -= CHAR_SPEED;
         if (characterX < CHAR_WIDTH/2) characterX = CHAR_WIDTH/2;
       }
-      if (keys['d'] || keys['ArrowRight']) {
+      if (keys['d'] || keys['D'] || keys['ArrowRight']) {
         characterX += CHAR_SPEED;
         if (characterX > maxX) characterX = maxX;
       }
-      if (keys['w'] || keys['ArrowUp']) {
+      if (keys['w'] || keys['W'] || keys['ArrowUp']) {
         characterY -= CHAR_SPEED;
         if (characterY < CHAR_HEIGHT + 20) characterY = CHAR_HEIGHT + 20;
       }
-      if (keys['s'] || keys['ArrowDown']) {
+      if (keys['s'] || keys['S'] || keys['ArrowDown']) {
         characterY += CHAR_SPEED;
         if (characterY > canvas.height - 10) characterY = canvas.height - 10;
       }
@@ -857,6 +912,8 @@ async function fetchTopScores() {
     gameTime = 0;
     gameActive = true;
     ballInMotion = false;
+    gameOverTriggered = false;
+    scoreSaved = false;
   
   // Reset UI elements
   scoreElement.textContent = score;
@@ -868,7 +925,10 @@ async function fetchTopScores() {
   
   // Clear any existing ball
   ball = null;
-  
+
+  // Create a new ball for the player
+  createBall(); // player gets a ball after reset
+
   // Reset character position
   characterX = 200;
   characterY = 500;
@@ -880,7 +940,8 @@ async function fetchTopScores() {
   
   // Reset keys state
   keys = {};
-  window.shiftKey = false;
+  window.trajectoryKey = false;
+  shiftPressCount = 0;
 }
 
     // Game loop
@@ -907,7 +968,7 @@ async function fetchTopScores() {
       }
       
       drawAimingLine();
-      if (isDragging && window.shiftKey) {
+      if (isDragging && window.trajectoryKey) {
         drawTrajectory();
       }
       
@@ -934,27 +995,24 @@ async function fetchTopScores() {
         newBallBtn.style.display = "none";
       }
       
-     // Keyboard events
-      window.addEventListener('keydown', (e) => {
-        keys[e.key] = true;
-        
-        // Prevent Sticky Keys popup when Shift is pressed
-        if (e.key === 'Shift') {
-          window.shiftKey = true;
-          e.preventDefault(); // This prevents the Sticky Keys dialog
-        }
-        
-        // Additional prevention for repeated Shift presses
-        if (e.key === 'Shift' && e.repeat) {
-          e.preventDefault();
-        }
-      });
+    // Keyboard events
+    window.addEventListener('keydown', (e) => {
+      keys[e.key] = true;
+  
+    // Z for trajectory
+    if (e.key === 'z' || e.key === 'Z') {
+      window.trajectoryKey = true;
+    }
+  });
+  
+    window.addEventListener('keyup', (e) => {
+      keys[e.key] = false;
 
-      window.addEventListener('keyup', (e) => {
-        keys[e.key] = false;
-        if (e.key === 'Shift') window.shiftKey = false;
-      }); 
-      
+    if (e.key === 'z' || e.key === 'Z') {
+        window.trajectoryKey = false;
+      }
+    });
+
       // Cup color selection
       colorDots.forEach(dot => {
         dot.addEventListener('click', () => {
@@ -1064,6 +1122,4 @@ function drawAimingFeedback() {
       if (e.key === 'Enter' && document.getElementById('nameInputScreen').style.display === 'flex') {
         document.getElementById('nameInputForm').dispatchEvent(new Event('submit'));
       }
-
     });
-
