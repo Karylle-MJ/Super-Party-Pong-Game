@@ -40,14 +40,20 @@ function showGameOverPopup(score) {
   // Display player's score
   document.getElementById('playerScoreDisplay').textContent = `${playerName}: ${score} points`;
   
+  // Show loading state
+  const topScoresList = document.getElementById('topScoresList');
+  topScoresList.innerHTML = '<div class="loading-spinner">Loading scores...</div>';
+  topScoresList.className = 'scores-loading';
+  
   // Fetch and display top scores
   fetchTopScores().then(topScores => {
-    const topScoresList = document.getElementById('topScoresList');
-    topScoresList.innerHTML = '';
+    // Remove loading class
+    topScoresList.className = '';
     
     if (topScores.length === 0) {
       topScoresList.innerHTML = '<div class="score-item">No scores yet!</div>';
     } else {
+      topScoresList.innerHTML = '';
       topScores.forEach((scoreItem, index) => {
         const scoreElement = document.createElement('div');
         scoreElement.className = 'score-item';
@@ -58,6 +64,11 @@ function showGameOverPopup(score) {
         topScoresList.appendChild(scoreElement);
       });
     }
+  }).catch(error => {
+    // Handle error case
+    topScoresList.className = '';
+    topScoresList.innerHTML = '<div class="score-item">Error loading scores</div>';
+    console.error('Error fetching scores:', error);
   });
   
   // Show the popup
@@ -1043,4 +1054,5 @@ function drawAimingFeedback() {
       if (e.key === 'Enter' && document.getElementById('nameInputScreen').style.display === 'flex') {
         document.getElementById('nameInputForm').dispatchEvent(new Event('submit'));
       }
+
     });
