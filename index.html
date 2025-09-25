@@ -33,25 +33,27 @@
       </div>
       <button id="startBtn" class="start-button">START GAME</button>
       <div class="intro-controls">
-        <p>CONTROLS: WASD to move • CLICK & DRAG to throw • SHIFT for trajectory</p>
+        <p>CONTROLS: WASD to move • CLICK & DRAG to throw • Z for trajectory</p>
       </div>
     </div>
   </div>
 
   <!-- Game Over Popup -->
-  <div id="gameOverPopup" class="game-over-popup" style="display: none;">
-    <div class="game-over-content">
-      <h2 class="game-over-title">GAME OVER</h2>
-      <div id="playerScoreDisplay" class="player-score"></div>
-      <div class="top-scores">
-        <h3>TOP 5 SCORES</h3>
-        <div id="topScoresList" class="scores-loading">
-          <div class="loading-spinner">Loading scores...</div>
-        </div>
+<div id="gameOverPopup" class="game-over-popup" style="display: none;">
+  <div class="game-over-content">
+    <h2 class="game-over-title">GAME OVER</h2>
+    <!-- Add this line for the message -->
+    <div id="gameOverMessage" class="game-over-message"></div>
+    <div id="playerScoreDisplay" class="player-score"></div>
+    <div class="top-scores">
+      <h3>TOP 10 SCORES</h3>
+      <div id="topScoresList" class="scores-loading">
+        <div class="loading-spinner">Loading scores...</div>
       </div>
-      <button id="playAgainBtn" class="play-again-button">PLAY AGAIN</button>
     </div>
+    <button id="playAgainBtn" class="play-again-button">PLAY AGAIN</button>
   </div>
+</div>
 
   <!-- Main Game (initially hidden) -->
   <div id="gameContainer" class="container" style="display: none;">
@@ -94,7 +96,7 @@
           <p>• CLICK ANYWHERE to start aiming</p>
           <p>• DRAG to set direction and power</p>
           <p>• RELEASE to throw the ball</p>
-          <p>• HOLD SHIFT to show trajectory</p>
+          <p>• HOLD Z to show trajectory</p>
           <p>• USE WASD to move character</p>
           <p>• GET balls in cups to score points!</p>
         </div>
@@ -115,5 +117,4 @@
 
   <script src="game.js"></script>
 </body>
-
 </html>
