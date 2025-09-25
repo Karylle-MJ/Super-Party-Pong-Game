@@ -109,6 +109,18 @@
       color: #FFD700;
       text-shadow: 2px 2px 0 #000;
     }
+    .game-over-message {
+      font-size: 1.2rem;
+      color: #FFD700;
+      margin: 15px 0;
+      text-shadow: 1px 1px 0 #000;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
 
     .player-score {
       font-size: 1.5rem;
@@ -557,7 +569,6 @@
   font-size: 0.7rem;
   color: #ccc;
   margin-left: 10px;
-
 }
 /* Loading spinner styles */
 .scores-loading {
